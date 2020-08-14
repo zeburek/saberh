@@ -7,6 +7,9 @@ module saberh {
     requires tornadofx;
     requires tornadofx.controlsfx;
     requires org.controlsfx.controls;
+    requires kotlin.stdlib.jdk8;
+    requires kotlinx.coroutines.core;
+    requires kotlin.logging;
 
     opens ru.zeburek.saberh.utils to javafx.graphics;
     opens ru.zeburek.saberh.views to tornadofx;

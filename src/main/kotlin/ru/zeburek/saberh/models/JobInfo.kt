@@ -1,5 +1,6 @@
 package ru.zeburek.saberh.models
 
+import javafx.beans.property.*
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 import kotlinx.coroutines.Job
@@ -17,10 +18,10 @@ class JobInfo(command: String, job: Job, createdAt: Date, process: Process, outp
 }
 
 class Jobs() {
-    var jobs by property(FXCollections.observableArrayList<JobInfo>())
-    fun jobsProperty() = getProperty(Jobs::jobs)
+    val jobsProperty = SimpleListProperty<JobInfo>(this, "jobs", FXCollections.observableArrayList())
+    var jobs by jobsProperty
 }
 
 class JobsModel : ItemViewModel<Jobs>() {
-    val jobs = bind { item?.jobsProperty() }
+    val jobs = bind(Jobs::jobsProperty)
 }

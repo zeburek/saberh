@@ -1,20 +1,21 @@
 package ru.zeburek.saberh.models
 
+import javafx.beans.property.*
 import tornadofx.*
 
-class Package(pkgName: String? = null, installer: String? = null, uid: Int? = null) {
-    var pkgName by property(pkgName)
-    val pkgNameProperty = getProperty(Package::pkgName)
+class Package(pkgName: String? = null, installer: String? = null, uid: Int = 0) {
+    val pkgNameProperty = SimpleStringProperty(this, "pkgName", pkgName)
+    var pkgName by pkgNameProperty
 
-    var installer by property(installer)
-    val installerProperty = getProperty(Package::installer)
+    val installerProperty = SimpleStringProperty(this, "installer", installer)
+    var installer by installerProperty
 
-    var uid by property(uid)
-    val uidProperty = getProperty(Package::uid)
+    val uidProperty = SimpleIntegerProperty(this, "uid", uid)
+    var uid by uidProperty
 }
 
 class PackageModel(pkg: Package?) : ItemViewModel<Package>(pkg) {
-    val id = bind(Package::pkgNameProperty)
-    val deviceName = bind(Package::installerProperty)
-    val deviceStatus = bind(Package::uidProperty)
+    val pkgName = bind(Package::pkgNameProperty)
+    val installer = bind(Package::installerProperty)
+    val uid = bind(Package::uidProperty)
 }

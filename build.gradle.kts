@@ -10,33 +10,6 @@ plugins {
     id("de.undercouch.download") version "4.0.0"
 }
 
-extra.apply {
-    set("java11Args", listOf(
-        "--add-opens=javafx.graphics/com.sun.javafx.css=ALL-UNNAMED",
-        // For various usages of TraversalEngine
-        "--add-exports=javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls",
-        "--add-exports=javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls",
-        // For various behaviors across controls
-        "--add-exports=javafx.controls/com.sun.javafx.scene.control.behavior=org.controlsfx.controls",
-        // For ReadOnlyUnbackedObservableList across files
-        "--add-exports=javafx.controls/com.sun.javafx.scene.control=org.controlsfx.controls",
-        // For InputMap used in behavior classes
-        "--add-exports=javafx.controls/com.sun.javafx.scene.control.inputmap=org.controlsfx.controls",
-        // For EventHandlerManager in AutoCompletionBinding
-        "--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls",
-        // For MappingChange, NonIterableChange across files
-        "--add-exports=javafx.base/com.sun.javafx.collections=org.controlsfx.controls",
-        // For VersionInfo in VersionChecker
-        "--add-exports=javafx.base/com.sun.javafx.runtime=org.controlsfx.controls"
-    ))
-    set("java11RuntimeArgs", listOf(
-        // For accessing VirtualFlow field from the base class in GridViewSkin
-        "--add-opens=javafx.controls/javafx.scene.control.skin=org.controlsfx.controls",
-        // For accessing getChildren in ImplUtils
-        "--add-opens=javafx.graphics/javafx.scene=org.controlsfx.controls"
-    ))
-}
-
 val compileKotlin: KotlinCompile by tasks
 val compileJava: JavaCompile by tasks
 compileJava.destinationDir = compileKotlin.destinationDir
@@ -57,7 +30,10 @@ application{
         "--add-opens=javafx.controls/com.sun.javafx.scene.control=org.controlsfx.controls",
         "--add-opens=javafx.controls/com.sun.javafx.scene.control.behavior=org.controlsfx.controls",
         "--add-opens=javafx.controls/javafx.scene.control.skin=org.controlsfx.controls",
-        "--add-opens=javafx.graphics/com.sun.javafx.css=ALL-UNNAMED"
+        "--add-opens=javafx.graphics/com.sun.javafx.css=ALL-UNNAMED",
+        "--add-opens=javafx.controls/javafx.scene=tornadofx",
+        "--add-opens=javafx.graphics/javafx.scene=tornadofx",
+        "--add-opens=javafx.controls/javafx.scene.control=tornadofx"
     )
 }
 
@@ -98,10 +74,6 @@ jlink {
     launcher {
         name = "saberh"
     }
-//    mergedModule {
-//        requires("org.slf4j")
-//        requires("java.logging")
-//    }
     jpackage {
         if (getBoolean("download.jpackage")) {
             jpackageHome = downloadJPackage()

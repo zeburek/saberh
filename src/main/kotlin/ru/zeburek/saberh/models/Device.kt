@@ -1,5 +1,6 @@
 package ru.zeburek.saberh.models
 
+import javafx.beans.property.*
 import tornadofx.*
 
 enum class DeviceStatus(val status: String) {
@@ -19,14 +20,14 @@ enum class DeviceStatus(val status: String) {
 }
 
 class Device(id: String? = null, deviceName: String? = null, deviceStatus: DeviceStatus? = null) {
-    var id by property(id)
-    val idProperty = getProperty(Device::id)
+    val idProperty = SimpleStringProperty(this, "id", id)
+    var id by idProperty
 
-    var deviceName by property(deviceName)
-    val deviceNameProperty = getProperty(Device::deviceName)
+    val deviceNameProperty = SimpleStringProperty(this, "deviceName", deviceName)
+    var deviceName by deviceNameProperty
 
-    var deviceStatus by property(deviceStatus)
-    val deviceStatusProperty = getProperty(Device::deviceStatus)
+    val deviceStatusProperty = SimpleObjectProperty<DeviceStatus>(this, "deviceStatus", deviceStatus)
+    var deviceStatus by deviceStatusProperty
 
     val info
         get() = "$deviceName ($id)"
