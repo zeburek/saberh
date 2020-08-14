@@ -80,11 +80,11 @@ jlink {
         }
         skipInstaller = false
         
-        installerOptions = listOf("--copyright", "Copyrigth 2016-2020 Parviz Khavari")
+        installerOptions = arrayListOf("--copyright", "Copyrigth 2016-2020 Parviz Khavari")
         installerType = System.getenv("INSTALLER_TYPE") // we will pass this from the command line (example: -PinstallerType=msi)
         if (installerType == "msi") {
-//            imageOptions.plusAssign(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.ico"))
-            installerOptions.plusAssign(
+//            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.ico"))
+            installerOptions.addAll(
                 listOf(
                     "--win-per-user-install", "--win-dir-chooser",
                     "--win-menu", "--win-shortcut"
@@ -92,11 +92,11 @@ jlink {
             )
         }
         if (installerType == "pkg") {
-//            imageOptions.plusAssign(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.icns"))
+//            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.icns"))
         }
         if (installerType in listOf("deb", "rpm")) {
-//            imageOptions.plusAssign(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.png"))
-            installerOptions.plusAssign(
+//            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.png"))
+            installerOptions.addAll(
                 listOf(
                     "--linux-menu-group", "Tools",
                     "--linux-shortcut"
@@ -104,10 +104,10 @@ jlink {
             )
         }
         if (installerType == "deb") {
-            installerOptions.plusAssign(listOf("--linux-deb-maintainer", "me@parviz.pw"))
+            installerOptions.addAll(listOf("--linux-deb-maintainer", "me@parviz.pw"))
         }
         if (installerType == "rpm") {
-            installerOptions.plusAssign(listOf("--linux-rpm-license-type", "ASL 2.0"))
+            installerOptions.addAll(listOf("--linux-rpm-license-type", "ASL 2.0"))
         }
     }
 }

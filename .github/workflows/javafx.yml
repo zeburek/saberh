@@ -25,7 +25,7 @@ jobs:
         run: |
           gradle -D"download.jpackage"=true jpackage
       - run: ls -la
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v2
         with:
-          name: zerohelper
+          name: saberh-${{ matrix.config.package }}
           path: ./build/jpackage/
