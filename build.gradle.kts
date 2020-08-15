@@ -20,42 +20,35 @@ version = "1.0.0"
 
 application{
     mainClassName = "ru.zeburek.saberh.MainKt"
-    applicationDefaultJvmArgs = listOf(
-        "--add-opens=javafx.base/com.sun.javafx.runtime=org.controlsfx.controls",
-        "--add-opens=javafx.base/com.sun.javafx.collections=org.controlsfx.controls",
-        "--add-opens=javafx.graphics/com.sun.javafx.css=org.controlsfx.controls",
-        "--add-opens=javafx.graphics/com.sun.javafx.scene=org.controlsfx.controls",
-        "--add-opens=javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls",
-        "--add-opens=javafx.graphics/javafx.scene=org.controlsfx.controls",
-        "--add-opens=javafx.controls/com.sun.javafx.scene.control=org.controlsfx.controls",
-        "--add-opens=javafx.controls/com.sun.javafx.scene.control.behavior=org.controlsfx.controls",
-        "--add-opens=javafx.controls/javafx.scene.control.skin=org.controlsfx.controls",
-        "--add-opens=javafx.graphics/com.sun.javafx.css=ALL-UNNAMED",
-        "--add-opens=javafx.controls/javafx.scene=tornadofx",
-        "--add-opens=javafx.graphics/javafx.scene=tornadofx",
-        "--add-opens=javafx.controls/javafx.scene.control=tornadofx"
-    )
+    applicationDefaultJvmArgs = moduleAdditionalParams()
 }
 
 repositories {
     mavenCentral()
 }
 
+val jfxVersion = "11.0.2"
+
 javafx {
-    version = "11.0.2"
+    version = jfxVersion
     modules("javafx.controls", "javafx.graphics", "javafx.fxml")
-    configuration = "compileOnly"
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.3.8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.3.8") {
+        exclude("org.openjfx")
+    }
     implementation("no.tornado:tornadofx:1.7.20") {
         exclude("org.jetbrains.kotlin")
     }
-    implementation("org.controlsfx:controlsfx:11.0.2")
-    implementation("no.tornado:tornadofx-controlsfx:0.1")
+    implementation("org.controlsfx:controlsfx:11.0.2") {
+        exclude("org.openjfx")
+    }
+    implementation("no.tornado:tornadofx-controlsfx:0.1") {
+        exclude("org.openjfx")
+    }
     implementation("io.github.microutils:kotlin-logging:1.8.3")
     implementation("org.slf4j:slf4j-simple:1.7.29")
 }
@@ -72,7 +65,8 @@ jlink {
     addExtraDependencies("javafx")
     addOptions("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages")
     launcher {
-        name = "saberh"
+        name = "SaberH"
+        jvmArgs = moduleAdditionalParams("ru.zeburek.merged.module")
     }
     jpackage {
         if (getBoolean("download.jpackage")) {
@@ -83,7 +77,7 @@ jlink {
         installerOptions = arrayListOf("--copyright", "Copyrigth 2016-2020 Parviz Khavari")
         installerType = System.getenv("INSTALLER_TYPE") // we will pass this from the command line (example: -PinstallerType=msi)
         if (installerType == "msi") {
-//            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.ico"))
+            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/saberh/icon.ico"))
             installerOptions.addAll(
                 listOf(
                     "--win-per-user-install", "--win-dir-chooser",
@@ -92,10 +86,10 @@ jlink {
             )
         }
         if (installerType == "pkg") {
-//            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.icns"))
+            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/saberh/icon.icns"))
         }
         if (installerType in listOf("deb", "rpm")) {
-//            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/zerohelper/icon.png"))
+            imageOptions.addAll(listOf("--icon", "src/main/resources/ru/zeburek/saberh/icon.png"))
             installerOptions.addAll(
                 listOf(
                     "--linux-menu-group", "Tools",
@@ -163,4 +157,20 @@ fun downloadJPackage(): String {
     }
     return "$downloadDir/$directory"
 }
+
+fun moduleAdditionalParams(onePackage: String? = null): List<String> = listOf(
+    "--add-opens=javafx.base/com.sun.javafx.runtime=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.base/com.sun.javafx.collections=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.graphics/com.sun.javafx.css=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.graphics/com.sun.javafx.scene=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.graphics/com.sun.javafx.scene.traversal=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.graphics/javafx.scene=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.controls/com.sun.javafx.scene.control=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.controls/com.sun.javafx.scene.control.behavior=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.controls/javafx.scene.control.skin=${onePackage ?: "org.controlsfx.controls"}",
+    "--add-opens=javafx.graphics/com.sun.javafx.css=${onePackage ?: "ALL-UNNAMED"}",
+    "--add-opens=javafx.controls/javafx.scene=${onePackage ?: "tornadofx"}",
+    "--add-opens=javafx.graphics/javafx.scene=${onePackage ?: "tornadofx"}",
+    "--add-opens=javafx.controls/javafx.scene.control=${onePackage ?: "tornadofx"}"
+)
 
