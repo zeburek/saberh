@@ -1,5 +1,6 @@
 package ru.zeburek.saberh
 
+import javafx.scene.image.Image
 import javafx.scene.layout.AnchorPane
 import ru.zeburek.saberh.views.MasterView
 import tornadofx.*
@@ -11,6 +12,7 @@ class MainView: View() {
     init {
         root = masterView.root
         title = "SaberH"
+        addStageIcon(Image(javaClass.getResourceAsStream("icon.png")))
         // TODO: Use FXLauncher for building package: https://github.com/edvin/fxlauncher
     }
 }
