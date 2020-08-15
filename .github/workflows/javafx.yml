@@ -13,6 +13,8 @@ jobs:
             package: deb
           - os: macos-latest
             package: pkg
+          - os: windows-latest
+            package: msi
     steps:
       - uses: actions/checkout@v1
       - name: Setup java
