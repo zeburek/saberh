@@ -28,4 +28,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: saberh-${{ matrix.config.package }}
-          path: ./build/jpackage/
+          path: ./build/jpackage/*.${{ matrix.config.package }}
