@@ -26,7 +26,6 @@ jobs:
           INSTALLER_TYPE: ${{ matrix.config.package }}
         run: |
           gradle -D"download.jpackage"=true jpackage
-      - run: ls -la
       - uses: actions/upload-artifact@v2
         with:
           name: saberh-${{ matrix.config.package }}

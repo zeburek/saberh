@@ -7,14 +7,8 @@ It is a reincarnation of Zero Helper with brand new code (now it uses Kotlin + T
 
 # How to install?
 
-You can download installers for you platform (MacOS and Linux yet) from [Actions](https://github.com/zeburek/saberh/actions),
+You can download installers for you platform from [Actions](https://github.com/zeburek/saberh/actions),
 just open latest workflow and download yours artifact.
-
-If you need it on Windows you could now do the following:
-- Install WiX Toolset on Windows (https://github.com/wixtoolset/wix3/releases/tag/wix3112rtm)
-- Clone this repo
-- Run: `INSTALLER_TYPE=msi ./gradlew.bat -D"download.jpackage"=true jpackage`
-and you will get bundled installer in `./build/jpackage` dir.
 
 # Contribution
 
