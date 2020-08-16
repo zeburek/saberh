@@ -2,19 +2,12 @@ package ru.zeburek.saberh.controllers
 
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
-import javafx.event.EventHandler
-import javafx.scene.control.ComboBox
-import javafx.scene.control.Tab
-import javafx.scene.control.TabPane
-import javafx.scene.control.TableView
 import kotlinx.coroutines.*
 import mu.KotlinLogging
-import ru.zeburek.saberh.models.Device
-import ru.zeburek.saberh.models.DeviceStatus
-import ru.zeburek.saberh.models.JobInfo
-import ru.zeburek.saberh.models.JobsModel
-import ru.zeburek.saberh.models.Package
+import ru.zeburek.saberh.controllers.LayoutContoller.Companion.tabContainer
+import ru.zeburek.saberh.models.*
 import ru.zeburek.saberh.utils.ActionObservableList
+import ru.zeburek.saberh.utils.getParse
 import ru.zeburek.saberh.views.JobsView
 import ru.zeburek.saberh.views.MainToolbar
 import ru.zeburek.saberh.views.OutputTabPane
@@ -36,71 +29,35 @@ class AdbController : Controller() {
     val outputTabPane: OutputTabPane by inject()
 
     val devicesController: DevicesController by inject()
+    val layoutContoller: LayoutContoller by inject()
 
     val jobs = JobsModel()
 
     // COMMANDS
-    val cmdDevices
-        get() = listOf("adb", "devices")
-    val cmdLogcat
-        get() = if (devicesController.currentDevice.isNotEmpty) {
-            listOf("adb", "-s", devicesController.currentDevice.id.value, "logcat")
+    private fun preCommand(vararg params: String, useDevice: Boolean = true): List<String> =
+        if (devicesController.currentDevice.isNotEmpty && useDevice) {
+            listOf("adb", "-s", devicesController.currentDevice.id.value, *params)
         } else {
-            listOf("adb", "logcat")
+            listOf("adb", *params)
         }
-    fun cmdPackages(listType: String): List<String> = if (devicesController.currentDevice.isNotEmpty) {
-        listOf("adb", "-s", devicesController.currentDevice.id.value, "shell", "pm", "list", "packages", listType, "-i", "-U")
-    } else {
-        listOf("adb", "shell", "pm", "list", "packages", listType, "-i", "-U")
-    }
+
+    val cmdStartServer
+        get() = preCommand("start-server", useDevice = false)
+    val cmdKillServer
+        get() = preCommand("kill-server", useDevice = false)
+    val cmdDevices
+        get() = preCommand("devices", useDevice = false)
+    val cmdLogcat
+        get() = preCommand("logcat")
+
+    fun cmdPackages(listType: String): List<String> =
+        preCommand("shell", "pm", "list", "packages", listType, "-i", "-U")
     // END
-
-    private fun getParse(regexp: Regex): (String, Any, String) -> String {
-        return fun(line: String, field: Any, default: String): String {
-            val parsed = regexp.find(line)
-            if (parsed != null) {
-                if (field is Int && parsed.groups[field] != null) {
-                    return parsed.groups[field]!!.value
-                } else if (field is String && parsed.groups[field] != null) {
-                    return parsed.groups[field]!!.value
-                }
-            }
-            return default
-        }
-    }
-
-    private fun TabPane.tabContainer(job: JobInfo, tableViewData: TableView<OutputLine>.() -> Unit): Tab = tab(job.command) {
-        anchorpane {
-            scrollpane {
-                isFitToHeight = true
-                isFitToWidth = true
-                anchorpaneConstraints {
-                    topAnchor = 0.0
-                    bottomAnchor = 0.0
-                    leftAnchor = 0.0
-                    rightAnchor = 0.0
-                }
-
-                tableview(job.outputList) {
-                    smartResize()
-                    tableViewData()
-                }
-            }
-        }
-        onCloseRequest = EventHandler {
-            job.job.cancel("Tab closed")
-        }
-    }
-
-    private fun <T> selectFirstInComboBox(combobox: ComboBox<T>) {
-        GlobalScope.launch(Dispatchers.Main) {
-            combobox.selectionModel.selectFirst()
-        }
-    }
 
     fun adbLogcat() {
         val job = runPerLineAction(cmdLogcat)
-        val parseRegex = """^(?<date>[\d-]+)\s+(?<time>[\d:.]+)\s+(?<pid>[\d]+)\s+[\d]+\s+(?<level>[\w])\s+(?<message>.*)${'$'}""".toRegex()
+        val parseRegex =
+            """^(?<date>[\d-]+)\s+(?<time>[\d:.]+)\s+(?<pid>[\d]+)\s+[\d]+\s+(?<level>[\w])\s+(?<message>.*)${'$'}""".toRegex()
         val parse = getParse(parseRegex)
         outputTabPane.outputTabPane.apply {
             val newTab = tabContainer(job) {
@@ -109,7 +66,15 @@ class AdbController : Controller() {
                 readonlyColumn("Date", OutputLine::string) { value { parse(it.value.string, "date", "") } }
                 readonlyColumn("Time", OutputLine::string) { value { parse(it.value.string, "time", "") } }
                 readonlyColumn("PID", OutputLine::string) { value { parse(it.value.string, "pid", "") } }
-                readonlyColumn("Level", OutputLine::string) { value { parse(it.value.string, "level", "") } }.cellDecorator {
+                readonlyColumn("Level", OutputLine::string) {
+                    value {
+                        parse(
+                            it.value.string,
+                            "level",
+                            ""
+                        )
+                    }
+                }.cellDecorator {
                     style {
                         backgroundColor += when (it) {
                             "D" -> c(0.0, 0.0, 0.0, 0.3)
@@ -121,7 +86,15 @@ class AdbController : Controller() {
                         }
                     }
                 }
-                readonlyColumn("Message", OutputLine::string) { value { parse(it.value.string, "message", it.value.string) } }
+                readonlyColumn("Message", OutputLine::string) {
+                    value {
+                        parse(
+                            it.value.string,
+                            "message",
+                            it.value.string
+                        )
+                    }
+                }
             }
             newTab.select()
         }
@@ -132,19 +105,18 @@ class AdbController : Controller() {
         val parse = getParse(parseRegex)
         runResultsAction(cmdDevices, listOf(fun(elements) {
             devicesController.devices.clear()
-            elements.forEach {
-                val code = parse(it.string, "code", "")
-                val status = DeviceStatus.valueOfStatus(parse(it.string, "status", ""))
+            elements.forEach { line ->
+                val code = parse(line.string, "code", "")
+                val status = DeviceStatus.valueOfStatus(parse(line.string, "status", ""))
                 if (code.isNotBlank()) {
                     logger.info { "Found device: $code $status" }
                     if (status == DeviceStatus.DEVICE) {
-                        getPropertyByName(code, "ro.product.manufacturer") {
-                            val manuf = it
-                            if (it.isNotBlank())
-                                getPropertyByName(code, "ro.product.model") {
-                                    devicesController.devices.add(Device(code, "$manuf $it", status))
+                        getPropertyByName(code, "ro.product.manufacturer") { manuf ->
+                            if (manuf.isNotBlank())
+                                getPropertyByName(code, "ro.product.model") { model ->
+                                    devicesController.devices.add(Device(code, "$manuf $model", status))
                                     if (devicesController.devices.isNotEmpty()) {
-                                        selectFirstInComboBox(mainToolbar.devicesComboBox)
+                                        layoutContoller.selectFirstInComboBox(mainToolbar.devicesComboBox)
                                     }
                                 }
                         }
@@ -164,53 +136,32 @@ class AdbController : Controller() {
             devicesController.packages.clear()
             elements.forEach {
                 val pkg = Package(
-                        pkgName = parse(it.string, "package", ""),
-                        installer = parse(it.string, "installer", ""),
-                        uid = parse(it.string, "uid", "").toInt()
+                    pkgName = parse(it.string, "package", ""),
+                    installer = parse(it.string, "installer", ""),
+                    uid = parse(it.string, "uid", "").toInt()
                 )
                 devicesController.packages.add(pkg)
             }
             devicesController.packages.sortBy { it.pkgName }
             if (devicesController.packages.isNotEmpty()) {
-                selectFirstInComboBox(mainToolbar.packagesComboBox)
+                layoutContoller.selectFirstInComboBox(mainToolbar.packagesComboBox)
             }
         }))
-    }
-
-    fun adbDevices() {
-        val job = runResultsAction(listOf("adb", "devices"))
-        outputTabPane.outputTabPane.apply {
-            val newTab = tabContainer(job) {
-                smartResize()
-                readonlyColumn("#", OutputLine::lineNo)
-                readonlyColumn("Message", OutputLine::string)
-            }
-            newTab.select()
-        }
-    }
-
-    fun adbShowPackages(listType: String = "-3") {
-        val job = runPerLineAction(cmdPackages(listType))
-        outputTabPane.outputTabPane.apply {
-            val newTab = tabContainer(job) {
-                smartResize()
-                readonlyColumn("#", OutputLine::lineNo)
-                readonlyColumn("Message", OutputLine::string)
-            }
-            newTab.select()
-        }
     }
 
     fun runPerLineAction(command: List<String?>, onAddCommands: List<(OutputLine) -> OutputLine> = listOf()): JobInfo {
         return runCommand(command, onAddCommands as List<(Any) -> Any>, ActionObservableList::class.java)
     }
 
-    fun runResultsAction(command: List<String?>, onAddCommands: List<(ObservableList<OutputLine>) -> Any?> = listOf()): JobInfo {
+    fun runResultsAction(
+        command: List<String?>,
+        onAddCommands: List<(ObservableList<OutputLine>) -> Any?> = listOf()
+    ): JobInfo {
         return runCommand(command, onAddCommands as List<(Any) -> Any>, ObservableList::class.java)
     }
 
     private fun getPropertyByName(deviceSerialNo: String, property: String, callback: (String) -> Unit = {}) {
-        val job = runResultsAction(listOf("adb", "-s", deviceSerialNo, "shell", "getprop", property), listOf(fun(elements) {
+        runResultsAction(listOf("adb", "-s", deviceSerialNo, "shell", "getprop", property), listOf(fun(elements) {
             val result = elements.joinToString { outputLine -> outputLine.string }
             logger.info { "Got property $property for device $deviceSerialNo: $result" }
             callback(result)
@@ -218,9 +169,9 @@ class AdbController : Controller() {
     }
 
     private fun <E> runCommand(
-            command: List<String?>,
-            onAddCommands: List<(Any) -> Any>,
-            arrayType: Class<E>
+        command: List<String?>,
+        onAddCommands: List<(Any) -> Any>,
+        arrayType: Class<E>
     ): JobInfo {
         val list: ObservableList<OutputLine>
         if (arrayType == ActionObservableList::class) {
@@ -231,6 +182,7 @@ class AdbController : Controller() {
         } else {
             list = FXCollections.observableArrayList<OutputLine>()
         }
+        val finishProgress = layoutContoller.setIndeterminateProgress(command.joinToString(" "))
         logger.info { "Process started: ${command.joinToString(" ")}" }
         val ps = ProcessBuilder(*command.toTypedArray())
         ps.redirectErrorStream(true)
@@ -257,6 +209,7 @@ class AdbController : Controller() {
                             it(list)
                         }
                     }
+                    finishProgress()
                     jobsTable.jobsTable.refresh()
                 }
             }

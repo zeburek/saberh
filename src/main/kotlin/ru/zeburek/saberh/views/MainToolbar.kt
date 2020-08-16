@@ -8,6 +8,8 @@ import javafx.scene.text.TextAlignment
 import org.controlsfx.glyphfont.Glyph
 import ru.zeburek.saberh.controllers.AdbController
 import ru.zeburek.saberh.controllers.DevicesController
+import ru.zeburek.saberh.controllers.adbDevices
+import ru.zeburek.saberh.controllers.adbShowPackages
 import ru.zeburek.saberh.models.Device
 import ru.zeburek.saberh.models.DeviceStatus
 import ru.zeburek.saberh.models.Package

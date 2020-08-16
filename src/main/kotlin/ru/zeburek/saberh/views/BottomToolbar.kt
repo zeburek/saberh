@@ -3,11 +3,14 @@ package ru.zeburek.saberh.views
 import javafx.geometry.NodeOrientation
 import javafx.scene.control.ProgressBar
 import javafx.scene.paint.Paint
+import mu.KotlinLogging
 import org.controlsfx.glyphfont.Glyph
 import ru.zeburek.saberh.controllers.DevicesController
 import ru.zeburek.saberh.controllers.LayoutContoller
 import tornadofx.*
 
+
+private val logger = KotlinLogging.logger {}
 class BottomToolbar : View("My View") {
     val devicesController: DevicesController by inject()
     val layoutController: LayoutContoller by inject()
@@ -37,10 +40,13 @@ class BottomToolbar : View("My View") {
         label(stringBinding(devicesController.currentDevice.deviceName) {
             if (value == null) "No device selected" else "Device: $value"
         })
-        progressbar {
+        progressbar(layoutController.progressStatusProperty) {
             progressBar = this
             prefHeight = 10.0
-            progress = 0.0
+            progressProperty().addListener {
+                _, oldValue, newValue -> logger.debug { "Progress value changed from $oldValue to $newValue" }
+            }
         }
+        label(stringBinding(layoutController.progressTextProperty) { value })
     }
 }
