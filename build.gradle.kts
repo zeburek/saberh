@@ -1,6 +1,7 @@
 import java.lang.Boolean.getBoolean
 import de.undercouch.gradle.tasks.download.DownloadAction
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.konan.properties.Properties
 
 plugins {
     kotlin("jvm") version "1.4.0-rc"
@@ -12,6 +13,7 @@ plugins {
 
 repositories {
     jcenter()
+    mavenCentral()
 }
 
 val compileKotlin: KotlinCompile by tasks
@@ -59,6 +61,27 @@ dependencies {
 
 tasks {
     withType<KotlinCompile> {
+        doFirst {
+            val versionPropsFile = file("$buildDir/../src/main/resources/ru/zeburek/saberh/version.properties")
+
+            if (versionPropsFile.canRead()) {
+                logger.info("Version file: $versionPropsFile")
+                val versionProps = Properties()
+
+                versionProps.load(versionPropsFile.inputStream())
+
+                val major = versionProps["VERSION_MAJOR"]
+                val minor = versionProps["VERSION_MINOR"]
+                val code = versionProps["VERSION_PATCH"].toString().toInt() + 1
+
+                versionProps["VERSION_PATCH"] = code.toString()
+                versionProps.store(versionPropsFile.writer(), null)
+
+                val newVer = "$major.$minor.$code"
+                logger.info("New version: $newVer")
+                project.version = newVer
+            }
+        }
         kotlinOptions.jvmTarget = "11"
     }
 }

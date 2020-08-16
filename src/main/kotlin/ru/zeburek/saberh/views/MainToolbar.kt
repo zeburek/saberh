@@ -13,6 +13,7 @@ import ru.zeburek.saberh.controllers.adbShowPackages
 import ru.zeburek.saberh.models.Device
 import ru.zeburek.saberh.models.DeviceStatus
 import ru.zeburek.saberh.models.Package
+import ru.zeburek.saberh.utils.getVersion
 import tornadofx.*
 
 class MainToolbar : View("Main Toolbar") {
@@ -35,6 +36,10 @@ class MainToolbar : View("Main Toolbar") {
             item("Install App", KeyCombination.keyCombination("Ctrl+I")){id = "appInstallMainMenuItem"}
             item("Take screenshot", KeyCombination.keyCombination("Ctrl+T")){id = "takeScreenshotMainMenuItem"}
             item("About"){id = "aboutInfoMainMenuItem"}
+            customitem {
+                isDisable = true
+                label("Version: ${getVersion()}")
+            }
         }
         button(graphic = Glyph("FontAwesome", "PLUS")) {
             id = "tabsAddTubButton"
