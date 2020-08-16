@@ -8,7 +8,6 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.0.9"
     id("org.beryx.jlink") version "2.16.3"
     id("de.undercouch.download") version "4.0.0"
-    id("io.gitlab.arturbosch.detekt") version "1.11.0"
 }
 
 repositories {
@@ -39,23 +38,12 @@ javafx {
     modules("javafx.controls", "javafx.graphics", "javafx.fxml")
 }
 
-detekt {
-    failFast = false // fail build on any finding
-    buildUponDefaultConfig = true // preconfigure defaults
-
-    reports {
-        html.enabled = true
-        txt.enabled = true
-    }
-}
-
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.3.8") {
         exclude("org.openjfx")
     }
-    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.1")
     implementation("no.tornado:tornadofx:1.7.20") {
         exclude("org.jetbrains.kotlin")
     }
@@ -72,12 +60,6 @@ dependencies {
 tasks {
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "11"
-    }
-}
-tasks {
-    withType<io.gitlab.arturbosch.detekt.Detekt> {
-        // Target version of the generated JVM bytecode. It is used for type resolution.
-        this.jvmTarget = "11"
     }
 }
 
